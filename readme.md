@@ -11,7 +11,9 @@ a desktop companion
 - [x] find asset resources
   - create using piskelapp
 - [ ] show animation
-  - [ ] animate the pet in the window
+  - [x] animate the pet in the window
+  - [ ] move around in the window
+    - [ ] should have some basic physics
 - [x] generate a transparent window
 - [x] init some settings
   - [x] drag
