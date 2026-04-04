@@ -20,7 +20,7 @@ a desktop companion
     - click and drag around the window area
   - [x] close
     - temporary right click on the window to close it
-- [ ] read keystrokes to have something like powermode/charging
+- [x] read keystrokes to have something like powermode/charging
 - [ ] able to set timer for reminder
 
 ## setup
@@ -32,3 +32,5 @@ a desktop companion
 
 ### dependencies
 - pyqt5
+- pynput
+- 

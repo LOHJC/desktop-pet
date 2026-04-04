@@ -3,6 +3,35 @@
 from PyQt5 import QtGui, QtCore, QtWidgets
 import sys
 import os
+from pynput import keyboard
+
+class PowerMeter():
+    def __init__(self):
+        self.cur_power_val = 0
+        self.fully_charged_val = 100
+    
+    def charging(self, key_pressed : str):
+        if (key_pressed != ""):
+            self.cur_power_val = (self.cur_power_val + 1)  % self.fully_charged_val # range freom 0 to (fully_charged_val - 1)
+        print(f"key_pressed: {key_pressed}, cur_power_val: {self.cur_power_val}, %: {self.cur_power_val / self.fully_charged_val}")
+
+class KeyboardThread(QtCore.QThread):
+    key_pressed = QtCore.pyqtSignal(str)
+    def run(self):
+        # The listener runs in its own thread
+        with keyboard.Listener(on_press=self.on_press) as listener:
+            listener.join()
+
+    def on_press(self, key):
+        try:
+            # Handle alphanumeric keys
+            k = key.char
+        except AttributeError:
+            # Handle special keys (Space, Enter, etc.)
+            k = str(key)
+        
+        self.key_pressed.emit(k)
+
 
 class PetLoader(QtCore.QObject):
     # this dict has {petname, QtGui.QPixmap}
@@ -22,6 +51,14 @@ class PetLoader(QtCore.QObject):
         self.timer = QtCore.QTimer(self)
         self.timer.timeout.connect(self.update_frame)
         self.timer.start(200)
+
+        # for reading keyboard
+        self.keyboard_thread = KeyboardThread()
+        self.power_meter = PowerMeter()
+        self.keyboard_thread.key_pressed.connect(self.power_meter.charging)
+        self.keyboard_thread.start()
+
+
     
     def update_frame(self):
         current_sprites = self.walk_sprites
@@ -56,6 +93,9 @@ class PetHouse(QtWidgets.QMainWindow):
         # borderless, transparent and stay on top
         self.setWindowFlags(QtCore.Qt.FramelessWindowHint | QtCore.Qt.WindowStaysOnTopHint | QtCore.Qt.Tool)
         self.setAttribute(QtCore.Qt.WA_TranslucentBackground)
+        self.width = 300
+        self.height = 150
+        self.resize(self.width, self.height)
 
         # for calculate window dragging
         self.mouse_drag_pos = 0
@@ -64,7 +104,6 @@ class PetHouse(QtWidgets.QMainWindow):
         self.pets = []
         self.pets_pixmaps = {
         }
-
     
     def paintEvent(self, a0):
         painter = QtGui.QPainter(self)
