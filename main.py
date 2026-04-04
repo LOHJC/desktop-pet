@@ -45,6 +45,7 @@ class PetLoader(QtCore.QObject):
         self.base_path = f"assets/{petname}"
 
         # for animation
+        self.pet_scale = 2
         self.load_sprites()
 
         self.frame_index = 0
@@ -57,16 +58,29 @@ class PetLoader(QtCore.QObject):
         self.power_meter = PowerMeter()
         self.keyboard_thread.key_pressed.connect(self.power_meter.charging)
         self.keyboard_thread.start()
-
-
     
+    def resize_pixmap(self, pixmap : QtGui.QPixmap):
+        new_width = int(pixmap.width() * self.pet_scale)
+        new_height = int(pixmap.height() * self.pet_scale)
+
+        # Apply resizing
+        # Use Qt.FastTransformation to keep pixel
+        # Use Qt.SmoothTransformation to smooth
+        return pixmap.scaled(
+            new_width, 
+            new_height, 
+            QtCore.Qt.KeepAspectRatio, 
+            QtCore.Qt.FastTransformation
+        )
+
     def update_frame(self):
         current_sprites = self.walk_sprites
         if (len(current_sprites) == 0):
             return
         
         self.frame_index = (self.frame_index + 1) % len(current_sprites)
-        self.frame_changed.emit({self.petname: current_sprites[self.frame_index]})
+        pixmap = self.resize_pixmap(current_sprites[self.frame_index])
+        self.frame_changed.emit({self.petname: pixmap})
     
     def load_sprites(self):
         if not(os.path.exists(self.base_path)):

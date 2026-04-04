@@ -12,6 +12,7 @@ a desktop companion
   - create using piskelapp
 - [ ] show animation
   - [x] animate the pet in the window
+  - [x] add scale to resize pet
   - [ ] move around in the window
     - [ ] should have some basic physics
 - [x] generate a transparent window
