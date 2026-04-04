@@ -32,7 +32,6 @@ class KeyboardThread(QtCore.QThread):
         
         self.key_pressed.emit(k)
 
-
 class PetLoader(QtCore.QObject):
     # this dict has {petname, QtGui.QPixmap}
     frame_changed = QtCore.pyqtSignal(dict)
@@ -45,8 +44,14 @@ class PetLoader(QtCore.QObject):
         self.base_path = f"assets/{petname}"
 
         # for animation
-        self.pet_scale = 2
+        self.ori_width = 0 # original max width
+        self.ori_height = 0 # original max height
         self.load_sprites()
+        self.pet_scale = 2 # scale from the original
+        self.step_size = 2 # pet step
+        self.pos = QtCore.QPoint(0, 0)
+        self.house_width = 0
+        self.house_height = 0 
 
         self.frame_index = 0
         self.timer = QtCore.QTimer(self)
@@ -58,6 +63,12 @@ class PetLoader(QtCore.QObject):
         self.power_meter = PowerMeter()
         self.keyboard_thread.key_pressed.connect(self.power_meter.charging)
         self.keyboard_thread.start()
+    
+    def set_house_size(self, width, height):
+        self.house_width = width
+        self.house_height = height
+        self.pos.setX(width - self.ori_width * self.pet_scale)
+        self.pos.setY(height - self.ori_height * self.pet_scale)
     
     def resize_pixmap(self, pixmap : QtGui.QPixmap):
         new_width = int(pixmap.width() * self.pet_scale)
@@ -79,6 +90,7 @@ class PetLoader(QtCore.QObject):
             return
         
         self.frame_index = (self.frame_index + 1) % len(current_sprites)
+        self.pos.setX(self.pos.x() - self.step_size)
         pixmap = self.resize_pixmap(current_sprites[self.frame_index])
         self.frame_changed.emit({self.petname: pixmap})
     
@@ -95,7 +107,13 @@ class PetLoader(QtCore.QObject):
                 if (img.isNull()):
                     print(f"Error: {imgpath} is not valid")
                     return
-            
+                
+                if (img.width() > self.ori_width):
+                    self.ori_width = img.width()
+                
+                if (img.height() > self.ori_height):
+                    self.ori_height = img.height()
+
                 if (anim_folder == "idle"):
                     self.idle_sprites.append(img)
                 if (anim_folder == "walk"):
@@ -115,9 +133,8 @@ class PetHouse(QtWidgets.QMainWindow):
         self.mouse_drag_pos = 0
 
         # for the pets
-        self.pets = []
-        self.pets_pixmaps = {
-        }
+        self.pets = {}
+        self.pets_pixmaps = {}
     
     def paintEvent(self, a0):
         painter = QtGui.QPainter(self)
@@ -129,16 +146,20 @@ class PetHouse(QtWidgets.QMainWindow):
         painter.drawRect(self.rect())
         
         # show the pets
-        for pixmap in self.pets_pixmaps.values():
-            painter.drawPixmap(0, 0, pixmap) # TOFIX: temp render at 0,0
+        for petname in self.pets_pixmaps.keys():
+            pixmap = self.pets_pixmaps[petname]
+            pos = self.pets[petname].pos
+            painter.drawPixmap(pos.x(), pos.y(), pixmap) # TOFIX: temp render at 0,0
 
         return super().paintEvent(a0)
     
+    def mouseDoubleClickEvent(self, a0):
+        # TOFIX: temp using doubleclick to close the window
+        self.close()
+        QtWidgets.QApplication.instance().quit()
+        return super().mouseDoubleClickEvent(a0)
+    
     def mousePressEvent(self, a0):
-        # TOFIX: temp using rightclick to close the window
-        if (a0.button() == QtCore.Qt.RightButton):
-            self.close()
-            QtWidgets.QApplication.instance().quit()
         self.mouse_drag_pos = a0.globalPos()
         return super().mousePressEvent(a0)
     
@@ -157,7 +178,7 @@ class PetHouse(QtWidgets.QMainWindow):
         self.update()
 
     def add_pet(self, pet : PetLoader):
-        self.pets.append(pet)
+        self.pets[pet.petname]= pet
         pet.frame_changed.connect(self.update_display)
 
 
@@ -169,6 +190,7 @@ if __name__ == "__main__":
 
     # load the pet
     dust = PetLoader()
+    dust.set_house_size(pethouse.width, pethouse.height)
     pethouse.add_pet(dust)
 
     pass

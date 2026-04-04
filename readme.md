@@ -15,12 +15,15 @@ a desktop companion
   - [x] add scale to resize pet
   - [ ] move around in the window
     - [ ] should have some basic physics
+      - [ ] walk left and right
+      - [ ] turn when hit boundary
+      - [ ] jump
 - [x] generate a transparent window
 - [x] init some settings
   - [x] drag
     - click and drag around the window area
   - [x] close
-    - temporary right click on the window to close it
+    - temporary double click on the window to close it
 - [x] read keystrokes to have something like powermode/charging
 - [ ] able to set timer for reminder
 
@@ -34,4 +37,3 @@ a desktop companion
 ### dependencies
 - pyqt5
 - pynput
-- 
