@@ -47,8 +47,8 @@ class PetLoader(QtCore.QObject):
         self.ori_width = 0 # original max width
         self.ori_height = 0 # original max height
         self.load_sprites()
-        self.pet_scale = 2 # scale from the original
-        self.step_size = 2 # pet step
+        self.pet_scale = 3 # scale from the original
+        self.step_size = 5 # pet step
         self.pos = QtCore.QPoint(0, 0)
         self.house_width = 0
         self.house_height = 0 
@@ -90,8 +90,19 @@ class PetLoader(QtCore.QObject):
             return
         
         self.frame_index = (self.frame_index + 1) % len(current_sprites)
-        self.pos.setX(self.pos.x() - self.step_size)
+        
+        # decide the movement of the pet
+        # TOFIX: currently move left and right only
+        if (self.pos.x() < 0 or self.pos.x() > (self.house_width - self.ori_width * self.pet_scale)):
+            transform = QtGui.QTransform()
+            transform.scale(-1, 1)  # Flip horizontally
+            for i in range(len(current_sprites)):
+                current_sprites[i] = current_sprites[i].transformed(transform)
+            self.step_size = -self.step_size # reverse direction
+        
         pixmap = self.resize_pixmap(current_sprites[self.frame_index])
+        self.pos.setX(self.pos.x() - self.step_size)
+        
         self.frame_changed.emit({self.petname: pixmap})
     
     def load_sprites(self):

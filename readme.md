@@ -15,8 +15,8 @@ a desktop companion
   - [x] add scale to resize pet
   - [ ] move around in the window
     - [ ] should have some basic physics
-      - [ ] walk left and right
-      - [ ] turn when hit boundary
+      - [x] walk left and right
+      - [x] turn when hit boundary
       - [ ] jump
 - [x] generate a transparent window
 - [x] init some settings
